@@ -1,0 +1,23 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#007AFF;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#5856D6;stop-opacity:1" />
+    </linearGradient>
+    <filter id="dropshadow" height="130%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="2" dy="2" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge> 
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/> 
+      </feMerge>
+    </filter>
+</defs>
+<g filter="url(#dropshadow)">
+    <path d="M88 44H84V36C84 24.9543 75.0457 16 64 16C52.9543 16 44 24.9543 44 36V44H40C35.5817 44 32 47.5817 32 52V100C32 104.418 35.5817 108 40 108H88C92.4183 108 96 104.418 96 100V52C96 47.5817 92.4183 44 88 44Z" fill="url(#grad1)"/>
+    <path d="M64 84C68.4183 84 72 80.4183 72 76C72 71.5817 68.4183 68 64 68C59.5817 68 56 71.5817 56 76C56 80.4183 59.5817 84 64 84Z" fill="white" fill-opacity="0.8"/>
+</g>
+</svg>
