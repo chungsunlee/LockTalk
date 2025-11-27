@@ -1,25 +1,35 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:8000', // Default backend URL
-        changeOrigin: true,
-      },
-      '/ws/messages': {
-        target: 'ws://127.0.0.1:8000', // Default WebSocket URL
-        ws: true,
+export default defineConfig(({ mode }) => {
+  // Load env file based on `mode` in the current working directory.
+  // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
+  const env = loadEnv(mode, path.join(process.cwd(), 'frontend'), '');
+
+  const backendUrl = env.VITE_BACKEND_URL || 'http://127.0.0.1:8000';
+  const wsUrl = backendUrl.replace(/^http/, 'ws');
+
+  return {
+    plugins: [react()],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
       },
     },
-  },
+    server: {
+      proxy: {
+        '/api': {
+          target: backendUrl,
+          changeOrigin: true,
+        },
+        '/ws': {
+          target: wsUrl,
+          ws: true,
+          changeOrigin: true,
+        },
+      },
+    },
+  }
 })

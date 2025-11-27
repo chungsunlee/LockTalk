@@ -1,36 +1,24 @@
 // src/services/api.ts
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import type { Peer, ChatMessage, SendMessageRequest, HandshakeRequest, MutationResponse } from '@/types';
-
-// Create an axios instance with a base URL.
-// The VITE_API_BASE_URL is set in the .env file.
-// The Vite dev server proxies /api to the target specified in vite.config.ts
-const apiClient = axios.create({
-  baseURL: import.meta.env.PROD ? import.meta.env.VITE_API_BASE_URL : '/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+import { fetchBackendUrl } from './config';
 
 /**
- * # API Integration Layer
+ * # Asynchronous API Client
  * 
- * This file centralizes all HTTP communication with the Python backend.
- * It uses Axios for making requests. The functions are typed according
- * to the interfaces defined in `src/types/index.ts`.
- * 
- * ---
- * ### Backend Endpoint Mapping
- * This is where you would adjust the frontend to match your Python backend's endpoints if they differ.
- * 
- * | Frontend Call            | Assumed Backend Endpoint      | Purpose                                 |
- * |--------------------------|-------------------------------|-----------------------------------------|
- * | `discoverPeers()`        | `GET /api/discover`           | Fetch list of available peers.          |
- * | `startHandshake(req)`    | `POST /api/handshake`         | Initiate a secure connection.           |
- * | `sendMessage(req)`       | `POST /api/messages/send`     | Send a message (backend encrypts).      |
- * | `getMessageHistory(pId)` | `GET /api/messages/history`   | Get historical messages for a peer.     |
- * ---
+ * To support automatic backend discovery, the Axios client can no longer be created
+ * synchronously. Instead, we create a promise that resolves with the configured client
+ * once the backend URL is determined.
  */
+const apiClientPromise: Promise<AxiosInstance> = (async () => {
+    const baseUrl = await fetchBackendUrl();
+    return axios.create({
+        baseURL: `${baseUrl}/api`, // Append /api to the discovered base URL
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+})();
 
 
 /**
@@ -39,26 +27,24 @@ const apiClient = axios.create({
  */
 export const discoverPeers = async (): Promise<Peer[]> => {
   try {
+    const apiClient = await apiClientPromise;
     const response = await apiClient.get<Peer[]>('/discover');
-    // Here's a fun little easter egg for the console.
     console.log("Peers spotted in the wild! Don't worry, they don't bite. Usually.");
     return response.data;
   } catch (error) {
     console.error('Failed to discover peers:', error);
-    // In a real app, you might want to return a mock list for UI development
-    // return MOCK_PEERS;
     return [];
   }
 };
 
 /**
  * Initiates a handshake with a selected peer.
- * This is the first step to establishing a secure channel.
  * @param request - The handshake request containing the peer ID.
  * @returns A promise that resolves to a standard mutation response.
  */
 export const startHandshake = async (request: HandshakeRequest): Promise<MutationResponse> => {
   try {
+    const apiClient = await apiClientPromise;
     const response = await apiClient.post<MutationResponse>('/handshake', request);
     return response.data;
   } catch (error) {
@@ -74,6 +60,7 @@ export const startHandshake = async (request: HandshakeRequest): Promise<Mutatio
  */
 export const sendMessage = async (request: SendMessageRequest): Promise<MutationResponse> => {
   try {
+    const apiClient = await apiClientPromise;
     const response = await apiClient.post<MutationResponse>('/messages/send', request);
     return response.data;
   } catch (error) {
@@ -89,6 +76,7 @@ export const sendMessage = async (request: SendMessageRequest): Promise<Mutation
  */
 export const getMessageHistory = async (peerId: string): Promise<ChatMessage[]> => {
   try {
+    const apiClient = await apiClientPromise;
     const response = await apiClient.get<ChatMessage[]>(`/messages/history?peerId=${peerId}`);
     return response.data;
   } catch (error) {
